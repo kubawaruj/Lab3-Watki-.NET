@@ -2,7 +2,7 @@
 {
     internal class Program
     {
-        public static volatile Matrix e; //mnożenie Parallel
+        public static volatile Matrix e; //wynikowa mnożenie Parallel
         static void Main(string[] args)
         {
 
@@ -12,7 +12,7 @@
             Console.WriteLine("Wprowadź rozmiar macierzy: ");
             n = int.Parse(Console.ReadLine());
 
-            Console.WriteLine($"Twój komputer posiada {Environment.ProcessorCount} rdzeni.");
+            Console.WriteLine($"\nTwój komputer posiada {Environment.ProcessorCount} rdzeni.");
             Console.WriteLine("Wprowadź liczbę wątków: ");
             threads_number = int.Parse(Console.ReadLine());
 
@@ -21,13 +21,16 @@
 
             Matrix a = new Matrix(n); //pierwotna
             Matrix b = new Matrix(n); //pierwotna
-            Matrix c = new Matrix(n); //bez mnożenia wątkowo
-            Matrix d = new Matrix(n); //mnożenie Threads
+            Matrix c = new Matrix(n); //wynikowa bez mnożenia wątkowo
+            Matrix d = new Matrix(n); //wynikowa mnożenie Threads
             e = new Matrix(n);
 
             a.RandomMatrix();
             b.RandomMatrix();
 
+            var watchC = System.Diagnostics.Stopwatch.StartNew();
+            c = a * b;
+            watchC.Stop();
 
             int[] threads_fields = new int[threads_number];
             for (int i = 0; i < threads_number; i++)
@@ -59,34 +62,21 @@
                 threads[i] = new Thread(tabMulti[i].Multiplication);
                 threads[i].Name = i.ToString();
             }
-            DateTime startTime1 = DateTime.Now;
+            var watchD = System.Diagnostics.Stopwatch.StartNew();
             foreach (Thread x in threads) x.Start();
             foreach (Thread x in threads) x.Join();
+            watchD.Stop();
 
-            DateTime stopTime1 = DateTime.Now;
-            TimeSpan totalTime1 = stopTime1 - startTime1;
+            for (int i = 0; i < threads_number; i++) { tabMulti[i].c = e; }
 
+            ParallelOptions opt = new ParallelOptions() {MaxDegreeOfParallelism = threads_number };
+            int[] threadUesed = new int[Environment.ProcessorCount];
 
-            /*Console.WriteLine("Macierz A:");
-            Console.WriteLine(a);
+            var watchE = System.Diagnostics.Stopwatch.StartNew();
+            Parallel.ForEach(tabMulti, opt, x => { x.Multiplication(); threadUesed[Thread.CurrentThread.ManagedThreadId]++; }) ;
+            watchE.Stop();
 
-            Console.WriteLine("Macierz B:");
-            Console.WriteLine(b);
-
-            Console.WriteLine("Macierz C - Threads:");
-            Console.WriteLine(c);*/
-
-            DateTime startTime = DateTime.Now;
-            c = a * b;
-            DateTime stopTime = DateTime.Now;
-            TimeSpan totalTime = stopTime - startTime;
-            if (print) { 
-            Console.WriteLine("Macierz A*B:");
-            Console.WriteLine(c); 
-            }
-
-            Console.WriteLine($"Czas wykonania mnożenia macierzy o rozmiarze {n} wyniósł: {totalTime.TotalSeconds} s - Threads: {totalTime1.TotalSeconds} s");
-
+            //Console.WriteLine(string.Join(" ", threadUesed));
             if (print)
             {
                 Console.WriteLine("Macierz A:");
@@ -95,46 +85,34 @@
                 Console.WriteLine("Macierz B:");
                 Console.WriteLine(b);
 
-                Console.WriteLine("Macierz C - Threads:");
+                Console.WriteLine("Macierz C:");
+                Console.WriteLine(c);
+
+                Console.WriteLine("Macierz D - Threads:");
                 Console.WriteLine(d);
-            }
 
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < n; j++)
-                {
-                    e.matrix[i, j] = 0;
-                }
-            }
-
-            if (print)
-            {
-                Console.WriteLine("Macierz C - ZERO:");
+                Console.WriteLine("Macierz E - Parallel:");
                 Console.WriteLine(e);
             }
+            Console.WriteLine($"Czas wykonania mnożenia macierzy o rozmiarze {n} wyniósł:\n\t -sekwencyjnie: \t{watchC.Elapsed.TotalSeconds} s\n\t -wątkowo Threads: \t{watchD.Elapsed.TotalSeconds} s\n\t -wątkowo Parallel: \t{watchE.Elapsed.TotalSeconds} s");
+          
+            
+            string path = @"..\\..\\..\\Obliczanie_predkosci.txt";
+            StreamWriter sw;
 
-            for (int i = 0; i < threads_number; i++)
+            if (!File.Exists(path))
             {
-                tabMulti[i].c = e;
+                sw = File.CreateText(path);
             }
-
-            //threads[i] = new Thread(tabMulti[i].Multiplication);
-            ParallelOptions opt = new ParallelOptions() {MaxDegreeOfParallelism = threads_number };
-            int[] threadUesed = new int[Environment.ProcessorCount];
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            Parallel.ForEach(tabMulti, opt, x => { x.Multiplication(); threadUesed[Thread.CurrentThread.ManagedThreadId]++; }) ;
-
-            if (print)
+            else
             {
-                Console.WriteLine("Macierz C - Parallel:");
-                Console.WriteLine(e);
+                sw = new StreamWriter(path, true);
             }
-            Console.WriteLine(string.Join(" ", threadUesed));
-            watch.Stop();
-            Console.WriteLine($"{threads_number} threads ended in {watch.Elapsed.TotalSeconds} s.");
+            sw.WriteLine($"{n} {threads_number} {watchC.Elapsed.TotalSeconds} {watchD.Elapsed.TotalSeconds} {watchE.Elapsed.TotalSeconds}");
+            sw.Close();
         }
 
-
+        
 
     }
 }
