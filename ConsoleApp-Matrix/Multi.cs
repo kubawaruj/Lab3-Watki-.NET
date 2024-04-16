@@ -35,7 +35,9 @@
                 for (int j = 0; j < a.n; j++)
                 {
                     c.matrix[row, col] += a.matrix[row, j] * b.matrix[j, col];
+                    
                 }
+                //Console.WriteLine(Thread.CurrentThread.Name + " " + c.matrix[row, col]);
             }
 
 
