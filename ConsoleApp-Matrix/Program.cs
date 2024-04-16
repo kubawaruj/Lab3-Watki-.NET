@@ -7,6 +7,7 @@
         {
 
             int n = 0, threads_number = 0;
+            bool print = false;
 
             Console.WriteLine("Wprowadź rozmiar macierzy: ");
             n = int.Parse(Console.ReadLine());
@@ -14,6 +15,9 @@
             Console.WriteLine($"Twój komputer posiada {Environment.ProcessorCount} rdzeni.");
             Console.WriteLine("Wprowadź liczbę wątków: ");
             threads_number = int.Parse(Console.ReadLine());
+
+            Console.WriteLine("Czy wyświetlać macierze? true/false: ");
+            print = bool.Parse(Console.ReadLine());
 
             Matrix a = new Matrix(n); //pierwotna
             Matrix b = new Matrix(n); //pierwotna
@@ -76,13 +80,14 @@
             c = a * b;
             DateTime stopTime = DateTime.Now;
             TimeSpan totalTime = stopTime - startTime;
-
+            if (print) { 
             Console.WriteLine("Macierz A*B:");
-            Console.WriteLine(c);
+            Console.WriteLine(c); 
+            }
 
             Console.WriteLine($"Czas wykonania mnożenia macierzy o rozmiarze {n} wyniósł: {totalTime.TotalSeconds} s - Threads: {totalTime1.TotalSeconds} s");
 
-            if (Console.ReadLine() == "p")
+            if (print)
             {
                 Console.WriteLine("Macierz A:");
                 Console.WriteLine(a);
@@ -102,8 +107,12 @@
                 }
             }
 
-            Console.WriteLine("Macierz C - ZERO:");
-            Console.WriteLine(e);
+            if (print)
+            {
+                Console.WriteLine("Macierz C - ZERO:");
+                Console.WriteLine(e);
+            }
+
             for (int i = 0; i < threads_number; i++)
             {
                 tabMulti[i].c = e;
@@ -115,9 +124,11 @@
             var watch = System.Diagnostics.Stopwatch.StartNew();
             Parallel.ForEach(tabMulti, opt, x => { x.Multiplication(); threadUesed[Thread.CurrentThread.ManagedThreadId]++; }) ;
 
-            Console.WriteLine("Macierz C - Parallel:");
-            Console.WriteLine(e);
-
+            if (print)
+            {
+                Console.WriteLine("Macierz C - Parallel:");
+                Console.WriteLine(e);
+            }
             Console.WriteLine(string.Join(" ", threadUesed));
             watch.Stop();
             Console.WriteLine($"{threads_number} threads ended in {watch.Elapsed.TotalSeconds} s.");
