@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace ConsoleApp_Matrix
 {
@@ -8,19 +6,20 @@ namespace ConsoleApp_Matrix
     {
         public static volatile Matrix e; //wynikowa mnożenie Parallel
         public static volatile bool isFirst; //wynikowa mnożenie Parallel
+
         static void Main(string[] args)
         {
-            //Tests();
-            Functionality(0, 0, false, false);
-
-
+            //Functionality(0, 0, false, false);
+            Tests();
         }
 
-        static void Tests() {
-            int[] n = { 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000 };
+        static void Tests()
+        {
+            int[] n = { 1, 2, 5, 10, 20, 50, 100, 200};
             int[] threads = { 1, 2, 4, 8, 16 };
             Console.WriteLine("Trwają testy...");
-            foreach (int x in n) {
+            foreach (int x in n)
+            {
                 foreach (int y in threads)
                 {
                     Functionality(x, y, false, true);
@@ -29,9 +28,12 @@ namespace ConsoleApp_Matrix
             }
             Console.WriteLine("Zapisano dane do pliku");
         }
-        static void Functionality(int n, int threads_number, bool print, bool isTest) {
+
+        static void Functionality(int n, int threads_number, bool print, bool isTest)
+        {
+            Tuple<double, double, double>[] times = new Tuple<double, double, double>[10];
             isFirst = true;
-            if (!isTest)
+            if (!isTest)//Jednokrotne wywołanie programu przez użytkownika
             {
                 Console.WriteLine("Wprowadź rozmiar macierzy: ");
                 n = int.Parse(Console.ReadLine());
@@ -42,42 +44,49 @@ namespace ConsoleApp_Matrix
 
                 Console.WriteLine("Czy wyświetlać macierze? true/false: ");
                 print = bool.Parse(Console.ReadLine());
+                times[0] = Math(n, threads_number, print);
+                Console.WriteLine($"Czas wykonania mnożenia macierzy o rozmiarze {n} i liczbie wątków {threads_number} wyniósł:\n\t -sekwencyjnie: \t{times[0].Item1.ToString("0.00000000")} s\n\t -wątkowo Threads: \t{times[0].Item2.ToString("0.00000000")} s\n\t -wątkowo Parallel: \t{times[0].Item3.ToString("0.00000000")} s");
 
             }
-            Tuple<double, double, double>[] times = new Tuple<double, double, double>[10];
-            foreach (int i in Enumerable.Range(0, 10))
+            else //Wywołanie 10 razy, aby zliczyć średnią wartość czasów
             {
-                times[i] = Math(n, threads_number, print);
-                if (isFirst)
+                foreach (int i in Enumerable.Range(0, 10))
                 {
-                    isFirst = false;
+                    times[i] = Math(n, threads_number, print);
+                    if (isFirst) //Pierwszy raz liczy sekwencyjnie
+                    {
+                        isFirst = false;
+                    }
+                    else //Następne razy dla sekwencyjnego mnożenia, przepisuje wartość czasu pierwszego wywołania - optymalizacja czasowa dla dużego N, ale małej ilości wątków
+                    {
+                        times[i] = times[0];
+                    }
+
+                }
+
+                //Zapisywanie do pliku dla testów wartości średniej czasów
+                string path = @"..\\..\\..\\Obliczanie_predkosci_srednia2.txt";
+                StreamWriter sw;
+
+                if (!File.Exists(path))
+                {
+                    sw = File.CreateText(path);
                 }
                 else
                 {
-                    times[i] = times[0];
+                    sw = new StreamWriter(path, true);
                 }
-                
+                double avTimeSeq = (from time in times select time.Item1).Average();
+                double avTimeThr = (from time in times select time.Item2).Average();
+                double avTimePar = (from time in times select time.Item3).Average();
+                sw.WriteLine($"{n} {threads_number} {avTimeSeq.ToString("0.00000000")} {avTimeThr.ToString("0.00000000")} {avTimePar.ToString("0.00000000")}");
+                sw.Close();
             }
-
-            string path = @"..\\..\\..\\Obliczanie_predkosci_srednia1.txt";
-            StreamWriter sw;
-
-            if (!File.Exists(path))
-            {
-                sw = File.CreateText(path);
-            }
-            else
-            {
-                sw = new StreamWriter(path, true);
-            }
-            double avTimeSeq = (from time in times select time.Item1).Average();
-            double avTimeThr = (from time in times select time.Item2).Average();
-            double avTimePar = (from time in times select time.Item3).Average();
-            sw.WriteLine($"{n} {threads_number} {avTimeSeq.ToString("0.00000000")} {avTimeThr.ToString("0.00000000")} {avTimePar.ToString("0.00000000")}");
-            sw.Close();
         }
 
-        static Tuple<double, double, double> Math(int n, int threads_number, bool print) {
+
+        static Tuple<double, double, double> Math(int n, int threads_number, bool print)
+        {
             Matrix a = new Matrix(n); //pierwotna
             Matrix b = new Matrix(n); //pierwotna
             Matrix c = new Matrix(n); //wynikowa bez mnożenia wątkowo
@@ -93,7 +102,8 @@ namespace ConsoleApp_Matrix
                 c = a * b;
                 watchC.Stop();
             }
-            else {
+            else
+            {
                 watchC.Stop();
             }
 
@@ -160,8 +170,7 @@ namespace ConsoleApp_Matrix
                 Console.WriteLine("Macierz E - Parallel:");
                 Console.WriteLine(e);
 
-                Console.WriteLine($"Czas wykonania mnożenia macierzy o rozmiarze {n} wyniósł:\n\t -sekwencyjnie: \t{watchC.Elapsed.TotalSeconds} s\n\t -wątkowo Threads: \t{watchD.Elapsed.TotalSeconds} s\n\t -wątkowo Parallel: \t{watchE.Elapsed.TotalSeconds} s");
-            }
+                }
 
             return new Tuple<double, double, double>(watchC.Elapsed.TotalSeconds, watchD.Elapsed.TotalSeconds, watchE.Elapsed.TotalSeconds);
 
