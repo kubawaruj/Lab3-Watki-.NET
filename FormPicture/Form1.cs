@@ -1,8 +1,11 @@
+using System.Threading;
+using System.Windows.Forms;
+
 namespace FormPicture
 {
     public partial class Form1 : Form
     {
-        public Bitmap img;
+        private Bitmap img;
 
         public Form1()
         {
@@ -25,25 +28,20 @@ namespace FormPicture
                 }
             }
         }
+
         private void butProces_Click(object sender, EventArgs e)
         {
-            List<Bitmap> imgProcessed = new List<Bitmap>
-            {
-                new Bitmap(img.Width, img.Height),
-                new Bitmap(img.Width, img.Height),
-                new Bitmap(img.Width, img.Height),
-                new Bitmap(img.Width, img.Height)
-            };
 
             PictureBox[] listPicBox = { pictureBox2, pictureBox3, pictureBox4, pictureBox5 };
 
             List<ImgProces> imgProces = new List<ImgProces>
             {
-                new ImgProces(0, img, imgProcessed[0]),
-                new ImgProces(1, img, imgProcessed[1]),
-                new ImgProces(2, img, imgProcessed[2]),
-                new ImgProces(3, img, imgProcessed[3])
+                new ImgProces(0, new Bitmap(img), new Bitmap(img.Width, img.Height)),
+                new ImgProces(1, new Bitmap(img), new Bitmap(img.Width, img.Height)),
+                new ImgProces(2, new Bitmap(img), new Bitmap(img.Width, img.Height)),
+                new ImgProces(3, new Bitmap(img), new Bitmap(img.Width, img.Height))
             };
+
             ParallelOptions opt = new ParallelOptions() { MaxDegreeOfParallelism = 4 };
             Parallel.ForEach(imgProces, opt, x =>
             {
