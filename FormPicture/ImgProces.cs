@@ -84,7 +84,6 @@ namespace FormPicture
         private Bitmap Thresholding(Bitmap _img)
         {
             Bitmap tmp = _img;
-            //_mutex.WaitOne();
             tmp = Gray_scale(_img);
 
             _mutex.WaitOne();
@@ -127,73 +126,5 @@ namespace FormPicture
             return tmp;
         }
 
-        /*
-        private Bitmap Progowanie(Bitmap _img)
-        {
-            Bitmap tmp = _img;
-            
-
-            //Pobierz wartosc wszystkich punktow obrazu
-            _mutex.WaitOne();
-            tmp = Negatyw(_img);
-            BitmapData bmpData = tmp.LockBits(new Rectangle(0, 0, _img.Width, _img.Height), ImageLockMode.ReadWrite, tmp.PixelFormat);
-            byte[] pixelValues = new byte[Math.Abs(bmpData.Stride) * _img.Height];
-            System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, pixelValues, 0, pixelValues.Length);
-
-            byte value;
-            //Dla kolejnych punktow obrazu
-            for (int i = 0; i < (_img.Width * _img.Height); i++)
-            {
-                //Wartosci kolorow zapisane sa w kolejnosci Blue, Green, Red
-                if (pixelValues[3 * i] > (pixelValues.Max() / 2))
-                {
-                    value = pixelValues.Max();
-                }
-                else
-                {
-                    value = pixelValues.Min();
-                }
-
-                pixelValues[3 * i] = value;
-                pixelValues[3 * i + 1] = value;
-                pixelValues[3 * i + 2] = value;
-            }
-
-            //Wczytaj przetworzony obraz
-            System.Runtime.InteropServices.Marshal.Copy(pixelValues, 0, bmpData.Scan0, pixelValues.Length);
-            tmp.UnlockBits(bmpData);
-            _mutex.ReleaseMutex();
-            return tmp;
-
-        }
-        private Bitmap Negatyw(Bitmap _img)
-        {
-
-            //Pobierz wartosc wszystkich punktow obrazu
-            _mutex.WaitOne();
-            Bitmap bitmap = _img;
-            BitmapData bmpData = bitmap.LockBits(new Rectangle(0, 0, _img.Width, _img.Height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
-            byte[] pixelValues = new byte[Math.Abs(bmpData.Stride) * _img.Height];
-            System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, pixelValues, 0, pixelValues.Length);
-
-            //Dla kolejnych punktow obrazu
-            for (int i = 0; i < (_img.Width * _img.Height); i++)
-            {
-                //Wartosci kolorow zapisane sa w kolejnosci Blue, Green, Red
-                byte value = (byte)(0.299 * pixelValues[3 * i + 2] +
-                0.587 * pixelValues[3 * i + 1] +
-                0.114 * pixelValues[3 * i]);
-                pixelValues[3 * i] = value;
-                pixelValues[3 * i + 1] = value;
-                pixelValues[3 * i + 2] = value;
-            }
-
-            //Wczytaj przetworzony obraz
-            System.Runtime.InteropServices.Marshal.Copy(pixelValues, 0, bmpData.Scan0, pixelValues.Length);
-            bitmap.UnlockBits(bmpData);
-            _mutex.ReleaseMutex();
-            return bitmap;
-
-        }*/
     }
 }

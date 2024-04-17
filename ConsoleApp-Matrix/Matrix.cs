@@ -54,8 +54,5 @@ namespace ConsoleApp_Matrix
             }
             return s;
         }
-
-
-
     }
 }

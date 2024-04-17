@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-namespace ConsoleApp_Matrix
+﻿namespace ConsoleApp_Matrix
 {
     internal class Program
     {
@@ -15,7 +13,7 @@ namespace ConsoleApp_Matrix
 
         static void Tests()
         {
-            int[] n = { 1, 2, 5, 10, 20, 50, 100, 200};
+            int[] n = { 1, 2, 5, 10, 20, 50, 100, 200 };
             int[] threads = { 1, 2, 4, 8, 16 };
             Console.WriteLine("Trwają testy...");
             foreach (int x in n)
@@ -46,7 +44,6 @@ namespace ConsoleApp_Matrix
                 print = bool.Parse(Console.ReadLine());
                 times[0] = Math(n, threads_number, print);
                 Console.WriteLine($"Czas wykonania mnożenia macierzy o rozmiarze {n} i liczbie wątków {threads_number} wyniósł:\n\t -sekwencyjnie: \t{times[0].Item1.ToString("0.00000000")} s\n\t -wątkowo Threads: \t{times[0].Item2.ToString("0.00000000")} s\n\t -wątkowo Parallel: \t{times[0].Item3.ToString("0.00000000")} s");
-
             }
             else //Wywołanie 10 razy, aby zliczyć średnią wartość czasów
             {
@@ -99,7 +96,7 @@ namespace ConsoleApp_Matrix
             var watchC = System.Diagnostics.Stopwatch.StartNew();
             if (isFirst)
             {
-                c = a * b;
+                c = a * b; //mnożenie sekwencyjne
                 watchC.Stop();
             }
             else
@@ -107,12 +104,15 @@ namespace ConsoleApp_Matrix
                 watchC.Stop();
             }
 
+
+
+            //Obliczenie ile pól w macierzy wynikowej będzie liczone przez dany wątek
             int[] threads_fields = new int[threads_number];
             for (int i = 0; i < threads_number; i++)
             {
                 threads_fields[i] = n * n / threads_number;
             }
-            if (((n * n) % threads_number) > 0)
+            if (((n * n) % threads_number) > 0) //Jeżeli liczba pól nie jest całkowita to do kolejnych dodaj po jednym polu z reszty nieprzydzielonych pól
             {
                 for (int i = 0; i < ((n * n) % threads_number); i++)
                 {
@@ -120,6 +120,7 @@ namespace ConsoleApp_Matrix
                 }
             }
 
+            //Tworzenie tablicy przekazującej dane do wątków
             int tmp = 0;
             Multi[] tabMulti = new Multi[threads_number];
             for (int i = 0; i < threads_number; i++)
@@ -130,8 +131,9 @@ namespace ConsoleApp_Matrix
             }
 
 
+            /*----------------Threads---------------*/
+            //Tworzenie i uruchomienie wątków Threads
             Thread[] threads = new Thread[threads_number];
-
             for (int i = 0; i < threads_number; i++)
             {
                 threads[i] = new Thread(tabMulti[i].Multiplication);
@@ -142,17 +144,18 @@ namespace ConsoleApp_Matrix
             foreach (Thread x in threads) x.Join();
             watchD.Stop();
 
+
+
+            /*----------------Parallel---------------*/
+            //Ustawienie macierzy e jako macierzy wynikowej dla tablicy zmiennych przekazywanej do wątków - Parallel
             for (int i = 0; i < threads_number; i++) { tabMulti[i].c = e; }
-
             ParallelOptions opt = new ParallelOptions() { MaxDegreeOfParallelism = threads_number };
-            //int[] threadUesed = new int[Environment.ProcessorCount];
-            //Parallel.ForEach(tabMulti, opt, x => { x.Multiplication(); threadUesed[Thread.CurrentThread.ManagedThreadId]++; });
 
+            //Uruchomienie wątków Parallel
             var watchE = System.Diagnostics.Stopwatch.StartNew();
             Parallel.ForEach(tabMulti, opt, x => { x.Multiplication(); });
             watchE.Stop();
 
-            //Console.WriteLine(string.Join(" ", threadUesed));
             if (print)
             {
                 Console.WriteLine("Macierz A:");
@@ -170,12 +173,9 @@ namespace ConsoleApp_Matrix
                 Console.WriteLine("Macierz E - Parallel:");
                 Console.WriteLine(e);
 
-                }
+            }
 
             return new Tuple<double, double, double>(watchC.Elapsed.TotalSeconds, watchD.Elapsed.TotalSeconds, watchE.Elapsed.TotalSeconds);
-
         }
-
-
     }
 }
