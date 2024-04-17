@@ -6,7 +6,6 @@ namespace FormPicture
     {
         public Bitmap img;
         public volatile Bitmap? imgProcessed;
-        private static Mutex _mutex = new Mutex();
         public int imgFilter { get; set; }
         
 
@@ -39,7 +38,6 @@ namespace FormPicture
                 default:
                     break;
             }
-
         }
 
         public Bitmap Sobel(Bitmap _img)
@@ -47,7 +45,6 @@ namespace FormPicture
             Bitmap tmp = _img;
             int value;
 
-            _mutex.WaitOne();
             tmp = Gray_scale(_img);
 
             for (int i = 0; i < tmp.Width-2; i++)
@@ -60,15 +57,12 @@ namespace FormPicture
                     tmp.SetPixel(i, j, Color.FromArgb(255, value, value, value));
                 }
             }
-            _mutex.ReleaseMutex();
             return tmp;
         }
         private Bitmap Negative(Bitmap _img)
         {
             Bitmap tmp = _img;
             Color color;
-
-            _mutex.WaitOne();
 
             for (int i = 0; i < tmp.Width; i++)
             {
@@ -78,7 +72,6 @@ namespace FormPicture
                     tmp.SetPixel(i, j, Color.FromArgb(255, 255 - color.R, 255 - color.G, 255 - color.B));
                 }
             }
-            _mutex.ReleaseMutex();
             return tmp;
         }
         private Bitmap Thresholding(Bitmap _img)
@@ -86,7 +79,6 @@ namespace FormPicture
             Bitmap tmp = _img;
             tmp = Gray_scale(_img);
 
-            _mutex.WaitOne();
             for (int i = 0; i < tmp.Width; i++)
             {
                 for (int j = 0; j < tmp.Height; j++)
@@ -101,7 +93,6 @@ namespace FormPicture
                     }
                 }
             }
-            _mutex.ReleaseMutex();
             return tmp;
         }
         private Bitmap Gray_scale(Bitmap _img)
@@ -109,8 +100,6 @@ namespace FormPicture
             Bitmap tmp = _img;
             int value = 0;
             Color color;
-
-            _mutex.WaitOne();
 
             for (int i = 0; i < tmp.Width; i++)
             {
@@ -122,7 +111,6 @@ namespace FormPicture
                     tmp.SetPixel(i, j, Color.FromArgb(255, value, value, value));
                 }
             }
-            _mutex.ReleaseMutex();
             return tmp;
         }
 
